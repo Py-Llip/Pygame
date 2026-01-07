@@ -6,19 +6,16 @@ class GameState:
     def __init__(self):
         self.worldSize = Vector2(16, 10)
         self.tankPos = Vector2(0, 0)
+        self.tower1Pos = Vector2(10, 3)
+        self.tower2Pos = Vector2(10, 5)
 
     def update(self, moveTankCommand):
-        self.tankPos += moveTankCommand
+        newTankPos = self.tankPos + moveTankCommand
 
-        if self.tankPos.x < 0:
-            self.tankPos.x = 0
-        elif self.tankPos.x >= self.worldSize.x:
-            self.tankPos.x = self.worldSize.x - 1
-
-        if self.tankPos.y < 0:
-            self.tankPos.y = 0
-        elif self.tankPos.y >= self.worldSize.y:
-            self.tankPos.y = self.worldSize.y - 1
+        if 0 <= newTankPos.x < self.worldSize.x \
+        and 0 <= newTankPos.y < self.worldSize.y \
+        and newTankPos != self.tower1Pos and newTankPos != self.tower2Pos:
+            self.tankPos = newTankPos
 
 class UserInterface:
     def __init__(self):
@@ -36,7 +33,9 @@ class UserInterface:
         self.window = pygame.display.set_mode((int(windowSize.x), int(windowSize.y)))
         pygame.display.set_caption('GameTank')
         pygame.display.set_icon(pygame.image.load('icon.png'))
+
         self.moveTankCommand = Vector2(0, 0)
+
 
         # Loop properties
         self.clock = pygame.time.Clock()
@@ -70,6 +69,24 @@ class UserInterface:
         # Tank base
         spritePoint = self.gameState.tankPos.elementwise()*self.cellSize
         texturePoint = Vector2(1, 0).elementwise()* self.cellSize
+        textureRect = Rect(int(texturePoint.x), int(texturePoint.y), int(self.cellSize.x), int(self.cellSize.y))
+        self.window.blit(self.unitsTexture, spritePoint, textureRect)
+
+        # Tower 1
+        spritePoint = self.gameState.tower2Pos.elementwise()*self.cellSize
+        texturePoint = Vector2(0, 1).elementwise()*self.cellSize
+        textureRect = Rect(int(texturePoint.x), int(texturePoint.y), int(self.cellSize.x), int(self.cellSize.y))
+        self.window.blit(self.unitsTexture, spritePoint, textureRect)
+        texturePoint = Vector2(0, 6).elementwise()*self.cellSize
+        textureRect = Rect(int(texturePoint.x), int(texturePoint.y), int(self.cellSize.x), int(self.cellSize.y))
+        self.window.blit(self.unitsTexture, spritePoint, textureRect)
+        
+        # Tower 2
+        spritePoint = self.gameState.tower1Pos.elementwise() * self.cellSize
+        texturePoint = Vector2(0, 1).elementwise() * self.cellSize
+        textureRect = Rect(int(texturePoint.x), int(texturePoint.y), int(self.cellSize.x), int(self.cellSize.y))
+        self.window.blit(self.unitsTexture, spritePoint, textureRect)
+        texturePoint = Vector2(0, 6).elementwise() * self.cellSize
         textureRect = Rect(int(texturePoint.x), int(texturePoint.y), int(self.cellSize.x), int(self.cellSize.y))
         self.window.blit(self.unitsTexture, spritePoint, textureRect)
 
