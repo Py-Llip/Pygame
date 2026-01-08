@@ -2,20 +2,65 @@ import pygame
 from pygame.math import Vector2
 from pygame import Rect
 
+class Unit:
+    def __init__(self, state, position, tile):
+        self.state = state
+        self.position = position
+        self.tile = tile
+
+    def move(self, moveVector):
+        raise NotImplementedError()
+
+class Tank(Unit):
+    def move(self, moveVector):
+        newPos = self.position + moveVector
+
+        if newPos.x < 0 or newPos.x >= self.state.worldSize.x \
+                or newPos.y < 0 or newPos.y >= self.state.worldSize.y:
+            return
+
+        for unit in self.state.units:
+            if newPos == unit.position:
+                return
+
+        self.position = newPos
+
+class Tower(Unit):
+    def move(self, moveVector):
+        pass
+
 class GameState:
     def __init__(self):
         self.worldSize = Vector2(16, 10)
-        self.tankPos = Vector2(0, 0)
-        self.tower1Pos = Vector2(10, 3)
-        self.tower2Pos = Vector2(10, 5)
+        self.units = [
+            Tank(self, Vector2(5, 4), Vector2(1, 0)),
+            Tower(self, Vector2(10, 3), Vector2(0, 1)),
+            Tower(self, Vector2(10, 5), Vector2(0, 1))
+        ]
+        self.ground = [
+            [ Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(6,2), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(5,1)],
+            [ Vector2(5,1), Vector2(5,1), Vector2(7,1), Vector2(5,1), Vector2(5,1), Vector2(6,2), Vector2(7,1), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(6,1), Vector2(5,1), Vector2(5,1), Vector2(6,4), Vector2(7,2), Vector2(7,2)],
+            [ Vector2(5,1), Vector2(6,1), Vector2(5,1), Vector2(5,1), Vector2(6,1), Vector2(6,2), Vector2(5,1), Vector2(6,1), Vector2(6,1), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(6,2), Vector2(6,1), Vector2(5,1)],
+            [ Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(6,1), Vector2(6,2), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(6,2), Vector2(5,1), Vector2(7,1)],
+            [ Vector2(5,1), Vector2(7,1), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(6,5), Vector2(7,2), Vector2(7,2), Vector2(7,2), Vector2(7,2), Vector2(7,2), Vector2(7,2), Vector2(7,2), Vector2(8,5), Vector2(5,1), Vector2(5,1)],
+            [ Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(6,1), Vector2(6,2), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(6,2), Vector2(5,1), Vector2(7,1)],
+            [ Vector2(6,1), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(6,2), Vector2(5,1), Vector2(5,1), Vector2(7,1), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(6,2), Vector2(7,1), Vector2(5,1)],
+            [ Vector2(5,1), Vector2(5,1), Vector2(6,4), Vector2(7,2), Vector2(7,2), Vector2(8,4), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(6,2), Vector2(5,1), Vector2(5,1)],
+            [ Vector2(5,1), Vector2(5,1), Vector2(6,2), Vector2(5,1), Vector2(5,1), Vector2(7,1), Vector2(5,1), Vector2(5,1), Vector2(6,1), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(7,4), Vector2(7,2), Vector2(7,2)],
+            [ Vector2(5,1), Vector2(5,1), Vector2(6,2), Vector2(6,1), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(5,1), Vector2(5,1)]
+]
+
+    @property
+    def worldWidth(self):
+        return int(self.worldSize.x)
+
+    @property
+    def worldHeight(self):
+        return int(self.worldSize.y)
 
     def update(self, moveTankCommand):
-        newTankPos = self.tankPos + moveTankCommand
-
-        if 0 <= newTankPos.x < self.worldSize.x \
-        and 0 <= newTankPos.y < self.worldSize.y \
-        and newTankPos != self.tower1Pos and newTankPos != self.tower2Pos:
-            self.tankPos = newTankPos
+        for unit in self.units:
+            unit.move(moveTankCommand)
 
 class UserInterface:
     def __init__(self):
@@ -27,6 +72,7 @@ class UserInterface:
         # Rendering properties
         self.cellSize = Vector2(64, 64)
         self.unitsTexture = pygame.image.load('units.png')
+        self.backgroundTexture = pygame.image.load('ground.png')
 
         #Window
         windowSize = self.gameState.worldSize.elementwise() * self.cellSize
@@ -40,6 +86,14 @@ class UserInterface:
         # Loop properties
         self.clock = pygame.time.Clock()
         self.running = True
+
+    @property
+    def cellWidth(self):
+        return int(self.cellSize.x)
+
+    @property
+    def cellHeight(self):
+        return int(self.cellSize.y)
 
     def processInput(self):
         self.moveTankCommand = Vector2(0, 0)
@@ -63,32 +117,40 @@ class UserInterface:
     def update(self):
         self.gameState.update(self.moveTankCommand)
 
+    def renderGround(self, position, tile):
+        # Location on screen
+        spritePoint = position.elementwise()*self.cellSize
+
+        # Texture
+        texturePoint = tile.elementwise() * self.cellSize
+        textureRect = Rect(int(texturePoint.x), int(texturePoint.y), self.cellWidth, self.cellHeight)
+        self.window.blit(self.backgroundTexture, spritePoint, textureRect)
+
+    def renderUnit(self, unit):
+        # Location on screen
+        spritePoint = unit.position.elementwise() * self.cellSize
+
+        # Unit texture
+        texturePoint = unit.tile.elementwise() * self.cellSize
+        textureRect = Rect(int(texturePoint.x), int(texturePoint.y), self.cellWidth, self.cellHeight)
+        self.window.blit(self.unitsTexture, spritePoint, textureRect)
+
+        # Weapon texture
+        texturePoint = Vector2(0, 6).elementwise() * self.cellSize
+        textureRect = Rect(int(texturePoint.x), int(texturePoint.y), self.cellWidth, self.cellHeight)
+        self.window.blit(self.unitsTexture, spritePoint, textureRect)
+
     def render(self):
         self.window.fill('black')
 
-        # Tank base
-        spritePoint = self.gameState.tankPos.elementwise()*self.cellSize
-        texturePoint = Vector2(1, 0).elementwise()* self.cellSize
-        textureRect = Rect(int(texturePoint.x), int(texturePoint.y), int(self.cellSize.x), int(self.cellSize.y))
-        self.window.blit(self.unitsTexture, spritePoint, textureRect)
+        # Background
+        for y in range(self.gameState.worldHeight):
+            for x in range(self.gameState.worldWidth):
+                self.renderGround(Vector2(x, y), self.gameState.ground[y][x])
 
-        # Tower 1
-        spritePoint = self.gameState.tower2Pos.elementwise()*self.cellSize
-        texturePoint = Vector2(0, 1).elementwise()*self.cellSize
-        textureRect = Rect(int(texturePoint.x), int(texturePoint.y), int(self.cellSize.x), int(self.cellSize.y))
-        self.window.blit(self.unitsTexture, spritePoint, textureRect)
-        texturePoint = Vector2(0, 6).elementwise()*self.cellSize
-        textureRect = Rect(int(texturePoint.x), int(texturePoint.y), int(self.cellSize.x), int(self.cellSize.y))
-        self.window.blit(self.unitsTexture, spritePoint, textureRect)
-        
-        # Tower 2
-        spritePoint = self.gameState.tower1Pos.elementwise() * self.cellSize
-        texturePoint = Vector2(0, 1).elementwise() * self.cellSize
-        textureRect = Rect(int(texturePoint.x), int(texturePoint.y), int(self.cellSize.x), int(self.cellSize.y))
-        self.window.blit(self.unitsTexture, spritePoint, textureRect)
-        texturePoint = Vector2(0, 6).elementwise() * self.cellSize
-        textureRect = Rect(int(texturePoint.x), int(texturePoint.y), int(self.cellSize.x), int(self.cellSize.y))
-        self.window.blit(self.unitsTexture, spritePoint, textureRect)
+        # Units
+        for unit in self.gameState.units:
+            self.renderUnit(unit)
 
         pygame.display.flip()
 
