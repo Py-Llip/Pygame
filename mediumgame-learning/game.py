@@ -72,7 +72,7 @@ class UserInterface:
         # Rendering properties
         self.cellSize = Vector2(64, 64)
         self.unitsTexture = pygame.image.load('units.png')
-        self.backgroundTexture = pygame.image.load('ground.png')
+        self.groundTexture = pygame.image.load('ground.png')
 
         #Window
         windowSize = self.gameState.worldSize.elementwise() * self.cellSize
@@ -124,7 +124,7 @@ class UserInterface:
         # Texture
         texturePoint = tile.elementwise() * self.cellSize
         textureRect = Rect(int(texturePoint.x), int(texturePoint.y), self.cellWidth, self.cellHeight)
-        self.window.blit(self.backgroundTexture, spritePoint, textureRect)
+        self.window.blit(self.groundTexture, spritePoint, textureRect)
 
     def renderUnit(self, unit):
         # Location on screen
